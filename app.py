@@ -40,13 +40,47 @@ def print_availability():
 
 # --- Book room ---
 @app.route('/check-availability', methods=['POST'])
-def save_booking():
+def check_availability():
     room_type = request.form.get('room_type')
     check_in = request.form.get('check_in')
     check_out = request.form.get('check_out')
 
     if not (room_type and check_in and check_out):
         return jsonify({"status": "error", "message": "Missing booking details"})
+
+    # Convert room_type numeric value from dropdown to name
+    room_map = {
+        "1": "Laxaries Rooms",
+        "2": "Deluxe Room",
+        "3": "Signature Room",
+        "4": "Couple Room"
+    }
+    room_name = room_map.get(room_type)
+    if not room_name:
+        return jsonify({"status": "error", "message": "Invalid room type"})
+
+    # Count existing bookings for that room type
+    existing_bookings = collection.count_documents({"room_type": room_name})
+
+    # Check against room limit
+    if existing_bookings >= ROOM_LIMIT.get(room_name, 10):
+        return jsonify({
+            "status": "full",
+            "message": f"❌ {room_name} is fully booked!"
+        })
+
+    # Otherwise, save booking
+    collection.insert_one({
+        "room_type": room_name,
+        "check_in": check_in,
+        "check_out": check_out
+    })
+
+    return jsonify({
+        "status": "success",
+        "message": f"✅ {room_name} booked successfully!"
+    })
+
 
     # Save directly to MongoDB
     collection.insert_one({

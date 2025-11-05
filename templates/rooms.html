@@ -489,11 +489,12 @@ Copyright &copy;<script>document.write(new Date().getFullYear());</script> All r
 
 <script>
 document.getElementById("test-form").addEventListener("submit", function(e) {
-  e.preventDefault(); // stops page reload
+  e.preventDefault();
 
   const check_in = document.getElementById("datepicker").value;
   const check_out = document.getElementById("datepicker2").value;
   const room_type = document.getElementById("room_type").value;
+  const button = document.querySelector(".boxed-btn3");
 
   const formData = new FormData();
   formData.append("check_in", check_in);
@@ -505,10 +506,23 @@ document.getElementById("test-form").addEventListener("submit", function(e) {
     body: formData
   })
   .then(res => res.json())
-  .then(data => alert(data.message))
-  .catch(() => alert("Server error!"));
+  .then(data => {
+    button.textContent = data.message;
+    if (data.status === "success") {
+      button.style.backgroundColor = "green"; // ✅ Available
+    } else if (data.status === "full") {
+      button.style.backgroundColor = "red";   // ❌ Full
+    } else {
+      button.style.backgroundColor = "gray";  // ⚠️ Error / invalid
+    }
+  })
+  .catch(() => {
+    button.textContent = "⚠️ Server Error";
+    button.style.backgroundColor = "gray";
+  });
 });
 </script>
+
 
 
 </body>
